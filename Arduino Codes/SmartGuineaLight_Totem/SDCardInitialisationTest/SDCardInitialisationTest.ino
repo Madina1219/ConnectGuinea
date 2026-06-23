@@ -1,10 +1,10 @@
 #include <SPI.h>
 #include <SD.h>
 
-#define CS_PIN   7
-#define SCK_PIN  5
-#define MOSI_PIN 6
-#define MISO_PIN 4
+#define CS_PIN   33
+#define SCK_PIN  34
+#define MOSI_PIN 35
+#define MISO_PIN 36
 
 SPIClass spi = SPIClass(HSPI);
 
@@ -15,7 +15,7 @@ void setup() {
 
   spi.begin(SCK_PIN, MISO_PIN, MOSI_PIN, CS_PIN);
 
-  if (!SD.begin(CS_PIN, spi, 4000000)) {  // 4MHz - slower speed
+  if (!SD.begin(CS_PIN, spi, 1000000)) {
     Serial.println("SD card FAILED to initialise.");
     return;
   }
@@ -26,8 +26,6 @@ void setup() {
     f.println("SmartLight Totem - SD test OK");
     f.close();
     Serial.println("File written OK");
-  } else {
-    Serial.println("Failed to write file");
   }
 
   f = SD.open("/test.txt");
