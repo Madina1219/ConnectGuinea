@@ -1,6 +1,6 @@
 #include "LoRaWan_APP.h"
 
-#define RF_FREQUENCY        868000000
+#define RF_FREQUENCY 915000000
 #define TX_OUTPUT_POWER     14
 #define LORA_BANDWIDTH      0
 #define LORA_SPREADING_FACTOR 7
