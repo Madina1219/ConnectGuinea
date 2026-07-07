@@ -1,46 +1,60 @@
-#include "LoRaWan_APP.h"
-#include "Arduino.h"
+#include <WiFi.h>
+#include <esp_now.h>
+#include <esp_wifi.h>
 
-#define RF_FREQUENCY 866300000
+#define TOTEM_ALERT_PIN 35   // change later if needed
 
-static RadioEvents_t RadioEvents;
+typedef struct struct_message {
+  char text[32];
+} struct_message;
 
-void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {
-  char msg[64];
+struct_message incomingData;
 
-  if (size >= sizeof(msg)) size = sizeof(msg) - 1;
-  memcpy(msg, payload, size);
-  msg[size] = '\0';
+void OnDataRecv(const esp_now_recv_info *info, const uint8_t *incomingDataPtr, int len) {
+  memcpy(&incomingData, incomingDataPtr, sizeof(incomingData));
 
   Serial.print("RECEIVED: ");
-  Serial.println(msg);
+  Serial.println(incomingData.text);
 
-  if (String(msg) == "FLOOD") {
+  if (strcmp(incomingData.text, "FLOOD") == 0) {
     Serial.println("FLOOD ALERT RECEIVED");
-  }
 
-  Radio.Rx(0);
+    for (int i = 0; i < 5; i++) {
+      digitalWrite(TOTEM_ALERT_PIN, HIGH);
+      delay(150);
+      digitalWrite(TOTEM_ALERT_PIN, LOW);
+      delay(150);
+    }
+  }
 }
 
 void setup() {
   Serial.begin(115200);
   delay(2000);
 
-  Serial.println("TOTEM RECEIVER STARTING");
+  pinMode(TOTEM_ALERT_PIN, OUTPUT);
+  digitalWrite(TOTEM_ALERT_PIN, LOW);
 
-  Mcu.begin(HELTEC_BOARD, SLOW_CLK_TPYE);
+  Serial.println("ESP-NOW TOTEM RECEIVER STARTING");
 
-  RadioEvents.RxDone = OnRxDone;
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
 
-  Radio.Init(&RadioEvents);
-  Radio.SetChannel(RF_FREQUENCY);
+  // Force same Wi-Fi channel as transmitter
+  esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
 
-  Radio.SetRxConfig(MODEM_LORA, 1, 9, 1, 0, 8, 0, false, 0, true, 0, 0, false, true);
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
 
-  Serial.println("RECEIVER READY - listening...");
-  Radio.Rx(0);
+  esp_now_register_recv_cb(OnDataRecv);
+
+  Serial.print("Receiver MAC Address: ");
+  Serial.println(WiFi.macAddress());
+
+  Serial.println("RECEIVER READY - listening on ESP-NOW channel 1...");
 }
 
 void loop() {
-  Radio.IrqProcess();
 }
