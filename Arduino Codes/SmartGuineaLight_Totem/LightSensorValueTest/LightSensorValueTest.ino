@@ -1,7 +1,7 @@
 // RGB LED pins
 const int redPin   = 19;
 const int greenPin = 20;
-const int bluePin  = 21;
+const int bluePin  = 12;
 
 // TEMT6000 on GPIO1 (ADC1_CH0)
 const int lightPin = 1;

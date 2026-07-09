@@ -1,11 +1,11 @@
 const int redPin   = 19;
 const int greenPin = 20;
-const int bluePin  = 21;
+const int bluePin  = 12;
 const int lightPin = 1;
 
 // Two thresholds to prevent feedback loop
-const int TURN_ON_THRESHOLD  = 50;   // must get THIS dark to turn on
-const int TURN_OFF_THRESHOLD = 400;  // must get THIS bright to turn off
+const int TURN_ON_THRESHOLD  = 30;   // must get THIS dark to turn on
+const int TURN_OFF_THRESHOLD = 150;  // must get THIS bright to turn off
 
 bool lightsAreOn = false;
 

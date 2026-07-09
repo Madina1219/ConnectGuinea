@@ -1,7 +1,7 @@
 // RGB LED pins
 const int redPin   = 19;
 const int greenPin = 20;
-const int bluePin  = 21;
+const int bluePin  = 4;
 
 void allOff() {
   digitalWrite(redPin,   LOW);

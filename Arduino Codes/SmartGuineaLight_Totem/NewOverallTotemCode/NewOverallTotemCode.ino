@@ -7,7 +7,7 @@
 // ─── RGB LED STRIP ───────────────────────────────
 const int redPin   = 19;
 const int greenPin = 20;
-const int bluePin  = 21;
+const int bluePin  = 4;
 
 // ─── LIGHT SENSOR ────────────────────────────────
 const int lightPin = 1;
@@ -80,7 +80,7 @@ void updateStatusRing() {
   } else if (lightsAreOn) {
     setBottomRing(0, 255, 0);    // GREEN = night, lights on, system active
   } else {
-    setBottomRing(255, 0, 0);    // RED = daytime, lights off, monitoring
+    setBottomRing(255, 0, 0);    // AMBER = daytime, lights off, monitoring
   }
 }
 
