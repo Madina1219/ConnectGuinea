@@ -7,65 +7,118 @@
 #include <Adafruit_INA219.h>
 #include <Adafruit_NeoPixel.h>
 
+// ─────────────────────────────────────────────
 // RGB LED STRIP
+// ─────────────────────────────────────────────
 const int redPin   = 19;
 const int greenPin = 20;
 const int bluePin  = 4;
 
+// ─────────────────────────────────────────────
 // LIGHT SENSOR
+// ─────────────────────────────────────────────
 const int lightPin = 1;
+
 const int TURN_ON_THRESHOLD  = 50;
 const int TURN_OFF_THRESHOLD = 400;
+
 bool lightsAreOn = false;
 
+// ─────────────────────────────────────────────
 // NEOPIXEL RINGS
-#define NEO_PIN 38
-#define NUMPIXELS 24
-Adafruit_NeoPixel rings(NUMPIXELS, NEO_PIN, NEO_GRB + NEO_KHZ800);
+// 24 LEDs total:
+// LEDs 0–11   = top illumination ring
+// LEDs 12–23 = bottom status ring
+// ─────────────────────────────────────────────
+#define NEO_PIN    38
+#define NUMPIXELS  24
 
-// INA219
+Adafruit_NeoPixel rings(
+  NUMPIXELS,
+  NEO_PIN,
+  NEO_GRB + NEO_KHZ800
+);
+
+// ─────────────────────────────────────────────
+// INA219 CURRENT SENSOR
+// ─────────────────────────────────────────────
 Adafruit_INA219 ina219(0x41);
+bool inaReady = false;
 
+// ─────────────────────────────────────────────
 // SD CARD
+// ─────────────────────────────────────────────
 #define SD_CS   33
 #define SD_SCK  34
 #define SD_MOSI 35
 #define SD_MISO 36
+
 SPIClass spi = SPIClass(HSPI);
 bool sdReady = false;
 
+// ─────────────────────────────────────────────
 // ESP-NOW MESSAGE
+// ─────────────────────────────────────────────
 typedef struct struct_message {
   char text[32];
 } struct_message;
 
 struct_message incomingData;
+
 volatile bool floodMessageReceived = false;
 
-// FLOOD TIMERS
+// ─────────────────────────────────────────────
+// FLOOD ALERT TIMING
+// ─────────────────────────────────────────────
 bool floodAlert = false;
-unsigned long floodStartTime = 0;
-const unsigned long FLOOD_FLASH_TIME = 10000;  // 10 sec
-const unsigned long FLOOD_TOTAL_TIME = 20000;  // total alert time
+bool lightsWereOnBeforeFlood = false;
 
-// LOGGING
+unsigned long floodStartTime = 0;
+
+const unsigned long FLOOD_FLASH_TIME     = 5000;
+const unsigned long FLOOD_STEADY_TIME    = 2000;
+const unsigned long FLOOD_TOTAL_TIME     =
+  FLOOD_FLASH_TIME + FLOOD_STEADY_TIME;
+
+const unsigned long FLOOD_FLASH_INTERVAL = 250;
+
+// ─────────────────────────────────────────────
+// POWER LOGGING
+// ─────────────────────────────────────────────
 unsigned long lastPowerLog = 0;
 unsigned long lastEnergyUpdate = 0;
-const unsigned long LOG_INTERVAL = 5000;
-float dailyEnergy_mWh = 0;
 
-// RINGS
+const unsigned long LOG_INTERVAL = 5000;
+
+float dailyEnergy_mWh = 0.0;
+
+// ─────────────────────────────────────────────
+// NEOPIXEL HELPERS
+// ─────────────────────────────────────────────
 void setTopRing(uint8_t r, uint8_t g, uint8_t b) {
-  for (int i = 0; i < 12; i++) rings.setPixelColor(i, rings.Color(r, g, b));
+  for (int i = 0; i < 12; i++) {
+    rings.setPixelColor(i, rings.Color(r, g, b));
+  }
+
   rings.show();
 }
 
 void setBottomRing(uint8_t r, uint8_t g, uint8_t b) {
-  for (int i = 12; i < 24; i++) rings.setPixelColor(i, rings.Color(r, g, b));
+  for (int i = 12; i < 24; i++) {
+    rings.setPixelColor(i, rings.Color(r, g, b));
+  }
+
   rings.show();
 }
 
-// STRIP
+void allRingsOff() {
+  rings.clear();
+  rings.show();
+}
+
+// ─────────────────────────────────────────────
+// RGB LED STRIP HELPERS
+// ─────────────────────────────────────────────
 void stripOff() {
   digitalWrite(redPin, LOW);
   digitalWrite(greenPin, LOW);
@@ -84,21 +137,50 @@ void stripBlue() {
   digitalWrite(bluePin, HIGH);
 }
 
+// ─────────────────────────────────────────────
+// NORMAL OPERATING MODE
+// ─────────────────────────────────────────────
 void normalLightsOn() {
   stripWhite();
   setTopRing(255, 255, 255);
+
   lightsAreOn = true;
 }
 
 void normalLightsOff() {
   stripOff();
   setTopRing(0, 0, 0);
+
   lightsAreOn = false;
 }
 
-// ESP-NOW CALLBACK
-void OnDataRecv(const esp_now_recv_info *info, const uint8_t *incomingDataPtr, int len) {
-  memcpy(&incomingData, incomingDataPtr, sizeof(incomingData));
+// ─────────────────────────────────────────────
+// ESP-NOW RECEIVE CALLBACK
+// ─────────────────────────────────────────────
+void OnDataRecv(
+  const esp_now_recv_info *info,
+  const uint8_t *incomingDataPtr,
+  int len
+) {
+  if (len <= 0) {
+    return;
+  }
+
+  memset(&incomingData, 0, sizeof(incomingData));
+
+  int bytesToCopy = len;
+
+  if (bytesToCopy > sizeof(incomingData)) {
+    bytesToCopy = sizeof(incomingData);
+  }
+
+  memcpy(
+    &incomingData,
+    incomingDataPtr,
+    bytesToCopy
+  );
+
+  incomingData.text[31] = '\0';
 
   Serial.print("RECEIVED: ");
   Serial.println(incomingData.text);
@@ -108,100 +190,243 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t *incomingDataPtr, i
   }
 }
 
+// ─────────────────────────────────────────────
+// START FLOOD ALERT
+// ─────────────────────────────────────────────
 void triggerFloodAlert() {
+  lightsWereOnBeforeFlood = lightsAreOn;
+
   floodAlert = true;
   floodStartTime = millis();
 
-  stripBlue();
-  setTopRing(0, 0, 255);
-
-  Serial.println("FLOOD ALERT ACTIVE - STRIP BLUE, STATUS FLASHING RED");
+  Serial.println("FLOOD ALERT RECEIVED");
+  Serial.println("Blue flashing for 3 seconds");
+  Serial.println("Blue steady for 2 seconds");
 }
 
+// ─────────────────────────────────────────────
+// FLOOD LIGHT SEQUENCE
+// ─────────────────────────────────────────────
+void updateFloodState() {
+  if (!floodAlert) {
+    return;
+  }
+
+  unsigned long elapsed =
+    millis() - floodStartTime;
+
+  // Stage 1:
+  // Flash blue for 3 seconds
+  if (elapsed < FLOOD_FLASH_TIME) {
+    bool flashOn =
+      ((elapsed / FLOOD_FLASH_INTERVAL) % 2) == 0;
+
+    if (flashOn) {
+      stripBlue();
+      setTopRing(0, 0, 255);
+    } else {
+      stripOff();
+      setTopRing(0, 0, 0);
+    }
+
+    return;
+  }
+
+  // Stage 2:
+  // Steady blue for 2 seconds
+  if (elapsed < FLOOD_TOTAL_TIME) {
+    stripBlue();
+    setTopRing(0, 0, 255);
+
+    return;
+  }
+
+  // Stage 3:
+  // Return to previous normal state
+  floodAlert = false;
+
+  if (lightsWereOnBeforeFlood) {
+    normalLightsOn();
+  } else {
+    normalLightsOff();
+  }
+
+  Serial.println(
+    "FLOOD ALERT CLEARED - NORMAL MODE RESTORED"
+  );
+}
+
+// ─────────────────────────────────────────────
+// STATUS RING
+// ─────────────────────────────────────────────
 void updateStatusRing() {
   if (floodAlert) {
-    unsigned long elapsed = millis() - floodStartTime;
+    unsigned long elapsed =
+      millis() - floodStartTime;
 
+    // Flash red during first 3 seconds
     if (elapsed < FLOOD_FLASH_TIME) {
-      if ((millis() / 300) % 2 == 0) {
-        setBottomRing(255, 0, 0);   // flashing red
+      bool flashOn =
+        ((elapsed / FLOOD_FLASH_INTERVAL) % 2) == 0;
+
+      if (flashOn) {
+        setBottomRing(255, 0, 0);
       } else {
         setBottomRing(0, 0, 0);
       }
-    } else {
-      setBottomRing(255, 0, 0);     // steady red
+
+      return;
     }
+
+    // Steady red during next 2 seconds
+    setBottomRing(255, 0, 0);
+
     return;
   }
 
   if (lightsAreOn) {
-    setBottomRing(0, 255, 0);       // green = normal active
+    setBottomRing(0, 255, 0);
   } else {
-    setBottomRing(255, 80, 0);      // amber = resting/daytime
+    setBottomRing(255, 80, 0);
   }
 }
 
-void updateFloodState(int lightLevel) {
-  if (!floodAlert) return;
-
-  unsigned long elapsed = millis() - floodStartTime;
-
-  if (elapsed >= FLOOD_FLASH_TIME) {
-    if (lightsAreOn || lightLevel < TURN_ON_THRESHOLD) {
-      normalLightsOn();
-    } else {
-      normalLightsOff();
-    }
+// ─────────────────────────────────────────────
+// SD CARD LOGGING
+// ─────────────────────────────────────────────
+void logToSD(
+  String state,
+  float voltage,
+  float current,
+  float power,
+  int lightLevel
+) {
+  if (!sdReady) {
+    return;
   }
 
-  if (elapsed >= FLOOD_TOTAL_TIME) {
-    floodAlert = false;
-    Serial.println("Flood alert cleared");
+  File file =
+    SD.open("/totem_log.csv", FILE_APPEND);
+
+  if (!file) {
+    Serial.println("Could not open SD log file");
+
+    return;
   }
+
+  file.print(millis());
+  file.print(",");
+
+  file.print(state);
+  file.print(",");
+
+  file.print(voltage, 3);
+  file.print(",");
+
+  file.print(current, 3);
+  file.print(",");
+
+  file.print(power, 3);
+  file.print(",");
+
+  file.print(dailyEnergy_mWh, 3);
+  file.print(",");
+
+  file.println(lightLevel);
+
+  file.close();
 }
 
-void logToSD(String state, float voltage, float current, float power, int lightLevel) {
-  if (!sdReady) return;
-
-  File f = SD.open("/totem_log.csv", FILE_APPEND);
-  if (f) {
-    f.print(millis()); f.print(",");
-    f.print(state); f.print(",");
-    f.print(voltage); f.print(",");
-    f.print(current); f.print(",");
-    f.print(power); f.print(",");
-    f.print(dailyEnergy_mWh); f.print(",");
-    f.println(lightLevel);
-    f.close();
-  }
-}
-
+// ─────────────────────────────────────────────
+// POWER MEASUREMENT
+// ─────────────────────────────────────────────
 void logPower(int lightLevel) {
-  float voltage = ina219.getBusVoltage_V();
-  float current_mA = ina219.getCurrent_mA();
-  float power_mW = ina219.getPower_mW();
+  float voltage = 0.0;
+  float current_mA = 0.0;
+  float power_mW = 0.0;
+
+  if (inaReady) {
+    voltage = ina219.getBusVoltage_V();
+    current_mA = ina219.getCurrent_mA();
+    power_mW = ina219.getPower_mW();
+  }
 
   unsigned long now = millis();
-  float hoursPassed = (now - lastEnergyUpdate) / 3600000.0;
-  dailyEnergy_mWh += power_mW * hoursPassed;
+
+  if (lastEnergyUpdate == 0) {
+    lastEnergyUpdate = now;
+  }
+
+  float hoursPassed =
+    (now - lastEnergyUpdate) / 3600000.0;
+
+  dailyEnergy_mWh +=
+    power_mW * hoursPassed;
+
   lastEnergyUpdate = now;
 
-  String stateStr = floodAlert ? "FLOOD_ALERT" :
-                    lightsAreOn ? "LIGHTS_ON" : "RESTING";
+  String stateStr;
 
-  Serial.println("─── TOTEM POWER ─────────────");
-  Serial.print("Voltage: "); Serial.print(voltage); Serial.println(" V");
-  Serial.print("Current: "); Serial.print(current_mA); Serial.println(" mA");
-  Serial.print("Power:   "); Serial.print(power_mW); Serial.println(" mW");
-  Serial.print("Energy today: "); Serial.print(dailyEnergy_mWh); Serial.println(" mWh");
-  Serial.print("Light level: "); Serial.println(lightLevel);
-  Serial.print("State: "); Serial.println(stateStr);
-  Serial.print("SD: "); Serial.println(sdReady ? "OK" : "NOT FOUND");
-  Serial.println("─────────────────────────────");
+  if (floodAlert) {
+    stateStr = "FLOOD_ALERT";
+  } else if (lightsAreOn) {
+    stateStr = "LIGHTS_ON";
+  } else {
+    stateStr = "RESTING";
+  }
 
-  logToSD(stateStr, voltage, current_mA, power_mW, lightLevel);
+  Serial.println(
+    "─── TOTEM POWER ─────────────"
+  );
+
+  Serial.print("Voltage: ");
+  Serial.print(voltage, 3);
+  Serial.println(" V");
+
+  Serial.print("Current: ");
+  Serial.print(current_mA, 3);
+  Serial.println(" mA");
+
+  Serial.print("Power:   ");
+  Serial.print(power_mW, 3);
+  Serial.println(" mW");
+
+  Serial.print("Energy today: ");
+  Serial.print(dailyEnergy_mWh, 3);
+  Serial.println(" mWh");
+
+  Serial.print("Light level: ");
+  Serial.println(lightLevel);
+
+  Serial.print("State: ");
+  Serial.println(stateStr);
+
+  Serial.print("INA219: ");
+  Serial.println(
+    inaReady ? "OK" : "NOT FOUND"
+  );
+
+  Serial.print("SD: ");
+  Serial.println(
+    sdReady ? "OK" : "NOT FOUND"
+  );
+
+  Serial.println(
+    "─────────────────────────────"
+  );
+
+  logToSD(
+    stateStr,
+    voltage,
+    current_mA,
+    power_mW,
+    lightLevel
+  );
 }
 
+// ─────────────────────────────────────────────
+// SETUP
+// ─────────────────────────────────────────────
 void setup() {
   Serial.begin(115200);
   delay(2000);
@@ -209,22 +434,32 @@ void setup() {
   pinMode(redPin, OUTPUT);
   pinMode(greenPin, OUTPUT);
   pinMode(bluePin, OUTPUT);
+
   stripOff();
 
   rings.begin();
   rings.setBrightness(80);
-  rings.clear();
-  rings.show();
+  allRingsOff();
 
+  // I2C for INA219
   Wire.begin(41, 42);
 
   if (!ina219.begin()) {
     Serial.println("INA219 not found");
+    inaReady = false;
   } else {
     Serial.println("INA219 OK");
+    inaReady = true;
   }
 
-  spi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
+  // SD card
+  spi.begin(
+    SD_SCK,
+    SD_MISO,
+    SD_MOSI,
+    SD_CS
+  );
+
   if (!SD.begin(SD_CS, spi, 1000000)) {
     Serial.println("SD card FAILED");
     sdReady = false;
@@ -233,23 +468,39 @@ void setup() {
     sdReady = true;
 
     if (!SD.exists("/totem_log.csv")) {
-      File f = SD.open("/totem_log.csv", FILE_WRITE);
-      if (f) {
-        f.println("millis,state,voltage_V,current_mA,power_mW,daily_energy_mWh,light_level");
-        f.close();
+      File file =
+        SD.open("/totem_log.csv", FILE_WRITE);
+
+      if (file) {
+        file.println(
+          "millis,state,voltage_V,current_mA,"
+          "power_mW,daily_energy_mWh,light_level"
+        );
+
+        file.close();
       }
     }
   }
 
+  // ESP-NOW
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
-  esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
+
+  esp_wifi_set_channel(
+    1,
+    WIFI_SECOND_CHAN_NONE
+  );
 
   if (esp_now_init() != ESP_OK) {
-    Serial.println("Error initializing ESP-NOW");
+    Serial.println(
+      "Error initializing ESP-NOW"
+    );
   } else {
     esp_now_register_recv_cb(OnDataRecv);
-    Serial.println("ESP-NOW receiver ready");
+
+    Serial.println(
+      "ESP-NOW receiver ready"
+    );
   }
 
   Serial.print("Receiver MAC Address: ");
@@ -260,32 +511,61 @@ void setup() {
   normalLightsOff();
   updateStatusRing();
 
-  Serial.println("SmartLight Totem Exhibition Ready");
+  Serial.println(
+    "SmartLight Totem Exhibition Ready"
+  );
 }
 
+// ─────────────────────────────────────────────
+// LOOP
+// ─────────────────────────────────────────────
 void loop() {
-  int lightLevel = analogRead(lightPin);
+  int lightLevel =
+    analogRead(lightPin);
 
+  // Process flood message safely
+  // outside the ESP-NOW callback
   if (floodMessageReceived) {
     floodMessageReceived = false;
+
     triggerFloodAlert();
   }
 
+  // Normal light-sensor behaviour
+  // is paused during flood alerts
   if (!floodAlert) {
-    if (!lightsAreOn && lightLevel < TURN_ON_THRESHOLD) {
+    if (
+      !lightsAreOn &&
+      lightLevel < TURN_ON_THRESHOLD
+    ) {
       normalLightsOn();
-      Serial.println("DARK - LIGHTS ON");
-    } else if (lightsAreOn && lightLevel > TURN_OFF_THRESHOLD) {
+
+      Serial.println(
+        "DARK - LIGHTS ON"
+      );
+    } else if (
+      lightsAreOn &&
+      lightLevel > TURN_OFF_THRESHOLD
+    ) {
       normalLightsOff();
-      Serial.println("BRIGHT - LIGHTS OFF");
+
+      Serial.println(
+        "BRIGHT - LIGHTS OFF"
+      );
     }
   }
 
-  updateFloodState(lightLevel);
+  updateFloodState();
   updateStatusRing();
 
-  if (millis() - lastPowerLog >= LOG_INTERVAL) {
+  if (
+    millis() - lastPowerLog >=
+    LOG_INTERVAL
+  ) {
     logPower(lightLevel);
+
     lastPowerLog = millis();
   }
+
+  delay(5);
 }
