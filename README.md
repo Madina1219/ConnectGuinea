@@ -2,7 +2,7 @@
 A solar-powered community infrastructure prototype for the neighbourhoods of Guinea.
 
 ## What it is
-SmartLight Totem is a fully off-grid solar totem that brings five things to a neighbourhood:
+Solar Smart Light Totem is a fully off-grid solar totem that brings five things to a neighbourhood:
 - Automatic street lighting — turns on at dusk, off at dawn via ambient light sensor
 - Visual flood alert system — receives LoRa wireless alerts and signals danger levels via a colour-coded status ring
 - USB phone charging — timed 30-minute sessions triggered by a push button
