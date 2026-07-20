@@ -115,21 +115,21 @@ Pressing the alert button sends a flood-warning message to the main totem.
 Smartstreet-Guinea/
 │
 ├── Arduino Codes/
-│   ├── Totem Receiver
-│   ├── Flood Transmitter
-│   └── Test Sketches
-│
-├── docs/
-│   ├── Wiring Diagrams
-│   ├── System Architecture
-│   ├── User Guide
-│   └── Project Documentation
+│   ├── Smart Totem firmware
+│   ├── Flood-alert transmitter firmware
+│   └── Supporting Arduino sketches
 │
 ├── building stages Images/
-│   └── Prototype Development Photos
+│   └── Photographs documenting the prototype development and assembly
 │
 ├── components Images/
-│   └── Hardware Components
+│   └── Images of electronic components and hardware used in the project
+│
+├── docs/
+│   ├── Wiring diagrams
+│   ├── Technical documentation
+│   ├── System architecture
+│   └── Project documentation
 │
 ├── README.md
 ├── LICENSE
