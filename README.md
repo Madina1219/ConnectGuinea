@@ -1,4 +1,4 @@
-# SmartLight Totem
+# Solar Smart Community Totem
 A solar-powered community infrastructure prototype for the neighbourhoods of Guinea.
 
 ## What it is
