@@ -8,7 +8,7 @@ The prototype combines three main services:
 - Automatic community lighting
 - A wireless visual flood-warning system
 - Shared USB device charging
-- 
+  
 The system is designed to operate locally without depending on Wi-Fi, mobile data or internet access.
 
 ## Main Functions
