@@ -131,15 +131,15 @@ National Meteorological Office
 
 ## Status
 **Prototype build - Functional proof-of-concept completed - exhibited at Degree Show 2026**
-- ✅ RGB LED strip — auto on/off via light sensor with hysteresis
-- ✅ Ambient light sensor — TEMT6000 on GPIO1, confirmed working
-- ✅ NeoPixel rings — flood alert colour states confirmed working
-- ✅ USB charging — mechanical 20-minute timer, no button trigger needed
-- ✅ INA219 power monitor — live voltage/current/wattage readings
-- ✅ MicroSD module — FAT32 formatted, write/read confirmed
-- ✅ State machine — non-blocking millis()-based light and alert logic built and tested
-- ✅ DS3231 RTC — confirmed working, coin cell backup survives reboot
-- ✅ ESP-NOW flood alert pairing — second Heltec transmitter, confirmed sending reliably
+- ✅ RGB LED strip - auto on/off via light sensor with hysteresis
+- ✅ Ambient light sensor - TEMT6000 on GPIO1, confirmed working
+- ✅ NeoPixel rings - flood alert colour states confirmed working
+- ✅ USB charging - mechanical 20-minute timer, no button trigger needed
+- ✅ INA219 power monitor - live voltage/current/wattage readings
+- ✅ MicroSD module - FAT32 formatted, write/read confirmed
+- ✅ State machine - non-blocking millis()-based light and alert logic built and tested
+- ✅ DS3231 RTC - confirmed working, coin cell backup survives reboot
+- ✅ ESP-NOW flood alert pairing - second Heltec transmitter, confirmed sending reliably
   
 ## Repository Structure
 
