@@ -112,6 +112,8 @@ Pressing the alert button sends a flood-warning message to the main totem.
 - [x] Demonstrated at the Connected Environments Degree Show 2026
 
 ## Repository Structure
+
+```text
 Smartstreet-Guinea/
 │
 ├── Arduino Codes/
@@ -134,3 +136,4 @@ Smartstreet-Guinea/
 ├── README.md
 ├── LICENSE
 └── .gitignore
+```
