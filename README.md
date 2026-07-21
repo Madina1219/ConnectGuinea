@@ -49,25 +49,45 @@ Mobile phones are important for communication, emergency information and maintai
 The project investigates how one shared community object could provide lighting, flood-risk communication and device charging.
 
 ## System Overview
-The prototype consists of two connected devices:
 
-### Smart Community Totem
-The main totem contains:
+The prototype consists of **two connected devices** that communicate wirelessly using LoRa technology.
+
+### 1. Smart Community Totem (Receiver)
+
+The Smart Community Totem is the main infrastructure unit. It provides three community services:
+- Automatic lighting using an ambient-light sensor
+- Visual flood-warning indication
+- USB charging for mobile devices
+
+The totem continuously listens for incoming flood-alert messages and changes its lighting behaviour accordingly.
+
+---
+
+### 2. Flood-Alert Demonstrator (Transmitter)
+
+For the exhibition and proof-of-concept demonstration, a second portable device was built to simulate a flood-warning source.
+
+The handheld transmitter contains:
 - A Heltec WiFi LoRa 32 V3 development board
-- A TEMT6000 ambient-light sensor
-- An LED lighting system
-- A battery-powered electrical system
-- USB charging connections
-- A visual flood-alert receiver
-
-### Flood-Alert Transmitter
-The separate portable transmitter contains:
-- A second Heltec development board
-- A small flood-alert button
-- A wireless communication system
+- A push button for manually sending a flood alert
 - A portable power supply
 
-Pressing the alert button sends a flood-warning message to the main totem.
+When the button is pressed, the transmitter sends a wireless flood-alert message to the Smart Community Totem. The totem immediately flashes blue before remaining continuously blue until the alert is cleared.
+
+---
+
+## Intended Real-World Deployment
+
+The handheld transmitter is used only for demonstration purposes.
+
+In a real community deployment, flood alerts would be generated automatically by environmental monitoring devices such as:
+- Water-level sensors
+- River-level monitoring stations
+- Flood detection sensors
+- Rainfall monitoring systems
+- Community early-warning infrastructure
+
+These monitoring devices would transmit flood-alert messages directly to the Smart Community Totem, allowing the warning to be displayed automatically without requiring manual intervention.
 
 ## Hardware
 | Component | Role |
@@ -86,7 +106,7 @@ Pressing the alert button sends a flood-warning message to the main totem.
 | 20A MPPT charge controller | Solar charging regulation |
 
 ## Status
-**Prototype build — exhibited at Degree Show 2026**
+**Prototype build - Functional proof-of-concept completed - exhibited at Degree Show 2026**
 - ✅ RGB LED strip — auto on/off via light sensor with hysteresis
 - ✅ Ambient light sensor — TEMT6000 on GPIO1, confirmed working
 - ✅ NeoPixel rings — flood alert colour states confirmed working
@@ -97,41 +117,25 @@ Pressing the alert button sends a flood-warning message to the main totem.
 - ✅ DS3231 RTC — confirmed working, coin cell backup survives reboot
 - ✅ ESP-NOW flood alert pairing — second Heltec transmitter, confirmed sending reliably
   
-## Prototype Status
-
-**Functional proof-of-concept completed**
-- [x] Automatic light activation using the ambient-light sensor
-- [x] Normal lighting behaviour tested
-- [x] Wireless communication between the transmitter and totem
-- [x] Flood-alert message transmission tested
-- [x] Blue flashing flood-alert pattern implemented
-- [x] Continuous blue warning state implemented
-- [x] Return to normal lighting after the warning is cleared
-- [x] USB device-charging demonstration
-- [x] Prototype assembled for public exhibition
-- [x] Demonstrated at the Connected Environments Degree Show 2026
-
 ## Repository Structure
 
 ```text
-Smartstreet-Guinea/
+ConnectGuinea/
 │
 ├── Arduino Codes/
-│   ├── Smart Totem firmware
-│   ├── Flood-alert transmitter firmware
-│   └── Supporting Arduino sketches
+│   └── Firmware for the Smart Totem and flood-alert transmitter
 │
-├── building stages Images/
+├── Building stages Images/
 │   └── Photographs documenting the prototype development and assembly
 │
-├── components Images/
+├── Docs/
+│   └── Wiring diagrams, technical documentation, system architecture
+│
+├── Final components images/
 │   └── Images of electronic components and hardware used in the project
 │
-├── docs/
-│   ├── Wiring diagrams
-│   ├── Technical documentation
-│   ├── System architecture
-│   └── Project documentation
+├── Final Product and Exhibition Images/
+│   └── Photos of the finished totem and Degree Show 2026 exhibition
 │
 ├── README.md
 ├── LICENSE
