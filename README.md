@@ -78,16 +78,31 @@ When the button is pressed, the transmitter sends a wireless flood-alert message
 
 ## Intended Real-World Deployment
 
-The handheld transmitter is used only for demonstration purposes.
+The handheld transmitter is used solely for demonstration purposes to simulate a flood warning during the exhibition.
 
-In a real community deployment, flood alerts would be generated automatically by environmental monitoring devices such as:
-- Water-level sensors
-- River-level monitoring stations
-- Flood detection sensors
-- Rainfall monitoring systems
-- Community early-warning infrastructure
+In a real deployment, the Smart Community Totem would receive official flood-alert messages from authorised monitoring services via a secure 4G or cellular network connection.
 
-These monitoring devices would transmit flood-alert messages directly to the Smart Community Totem, allowing the warning to be displayed automatically without requiring manual intervention.
+Potential alert sources include:
+
+- National Meteorological Office
+- Regional or local weather monitoring stations
+- Government emergency management agencies
+- Official flood forecasting and early-warning systems
+
+Once an official flood warning is issued, the alert would be transmitted automatically to the Smart Community Totem, which would immediately notify the local community through its visual blue warning light without requiring any manual intervention.
+National Meteorological Office
+        │
+        │  Official Flood Warning
+        ▼
+     4G / Cellular Network
+        ▼
+ Smart Community Totem
+        ▼
+Blue Flashing Warning
+        ▼
+Constant Blue Light
+        ▼
+Community Alert
 
 ## Hardware
 | Component | Role |
