@@ -89,20 +89,29 @@ Potential alert sources include:
 - Government emergency management agencies
 - Official flood forecasting and early-warning systems
 
-Once an official flood warning is issued, the alert would be transmitted automatically to the Smart Community Totem, which would immediately notify the local community through its visual blue warning light without requiring any manual intervention.
+## Intended Alert Flow
+
+Once an official flood warning is issued, the alert would be transmitted automatically to the Smart Community Totem. The totem would then notify the local community through its visual blue warning light without requiring manual intervention.
+
+```text
 National Meteorological Office
-        │
-        │  Official Flood Warning
-        ▼
-     4G / Cellular Network
-        ▼
- Smart Community Totem
-        ▼
-Blue Flashing Warning
-        ▼
-Constant Blue Light
-        ▼
-Community Alert
+              │
+              │ Official Flood Warning
+              ▼
+       4G / Cellular Network
+              │
+              ▼
+     Smart Community Totem
+              │
+              ▼
+       Blue Flashing Warning
+              │
+              ▼
+        Constant Blue Light
+              │
+              ▼
+         Community Alert
+```
 
 ## Hardware
 | Component | Role |
