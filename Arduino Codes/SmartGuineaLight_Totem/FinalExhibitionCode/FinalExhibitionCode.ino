@@ -4,6 +4,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
+#include <RTClib.h>
 #include <Adafruit_INA219.h>
 #include <Adafruit_NeoPixel.h>
 
@@ -44,6 +45,12 @@ Adafruit_NeoPixel rings(
 // ─────────────────────────────────────────────
 Adafruit_INA219 ina219(0x41);
 bool inaReady = false;
+
+// ─────────────────────────────────────────────
+// DS3231 RTC
+// ─────────────────────────────────────────────
+RTC_DS3231 rtc;
+bool rtcReady = false;
 
 // ─────────────────────────────────────────────
 // SD CARD
@@ -295,7 +302,9 @@ void updateStatusRing() {
 // SD CARD LOGGING
 // ─────────────────────────────────────────────
 void logToSD(
+  String timestamp,
   String state,
+  bool inaOk,
   float voltage,
   float current,
   float power,
@@ -314,19 +323,25 @@ void logToSD(
     return;
   }
 
+  file.print(timestamp);
+  file.print(",");
+
   file.print(millis());
   file.print(",");
 
   file.print(state);
   file.print(",");
 
-  file.print(voltage, 3);
-  file.print(",");
+  if (inaOk) {
+    file.print(voltage, 3);
+    file.print(",");
+    file.print(current, 3);
+    file.print(",");
+    file.print(power, 3);
+  } else {
+    file.print("NA,NA,NA");
+  }
 
-  file.print(current, 3);
-  file.print(",");
-
-  file.print(power, 3);
   file.print(",");
 
   file.print(dailyEnergy_mWh, 3);
@@ -375,9 +390,29 @@ void logPower(int lightLevel) {
     stateStr = "RESTING";
   }
 
+  String timestamp = "NO_RTC";
+
+  if (rtcReady) {
+    DateTime rtcNow = rtc.now();
+
+    char buf[20];
+
+    sprintf(
+      buf,
+      "%04d-%02d-%02d %02d:%02d:%02d",
+      rtcNow.year(), rtcNow.month(), rtcNow.day(),
+      rtcNow.hour(), rtcNow.minute(), rtcNow.second()
+    );
+
+    timestamp = String(buf);
+  }
+
   Serial.println(
     "─── TOTEM POWER ─────────────"
   );
+
+  Serial.print("Time: ");
+  Serial.println(timestamp);
 
   Serial.print("Voltage: ");
   Serial.print(voltage, 3);
@@ -406,6 +441,11 @@ void logPower(int lightLevel) {
     inaReady ? "OK" : "NOT FOUND"
   );
 
+  Serial.print("RTC: ");
+  Serial.println(
+    rtcReady ? "OK" : "NOT FOUND"
+  );
+
   Serial.print("SD: ");
   Serial.println(
     sdReady ? "OK" : "NOT FOUND"
@@ -416,7 +456,9 @@ void logPower(int lightLevel) {
   );
 
   logToSD(
+    timestamp,
     stateStr,
+    inaReady,
     voltage,
     current_mA,
     power_mW,
@@ -441,7 +483,7 @@ void setup() {
   rings.setBrightness(80);
   allRingsOff();
 
-  // I2C for INA219
+  // I2C bus (shared by INA219 and RTC)
   Wire.begin(41, 42);
 
   if (!ina219.begin()) {
@@ -450,6 +492,21 @@ void setup() {
   } else {
     Serial.println("INA219 OK");
     inaReady = true;
+  }
+
+  if (!rtc.begin()) {
+    Serial.println("RTC not found");
+    rtcReady = false;
+  } else {
+    Serial.println("RTC OK");
+    rtcReady = true;
+
+    // Only uncomment the line below ONCE to set the
+    // time from your computer's clock, then upload,
+    // then re-comment it and upload again.
+    // Leaving it active resets the clock to compile
+    // time on every single reboot.
+    // rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   }
 
   // SD card
@@ -473,7 +530,7 @@ void setup() {
 
       if (file) {
         file.println(
-          "millis,state,voltage_V,current_mA,"
+          "timestamp,millis,state,voltage_V,current_mA,"
           "power_mW,daily_energy_mWh,light_level"
         );
 
