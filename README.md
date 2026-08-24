@@ -6,16 +6,10 @@ A community-focused smart infrastructure prototype exploring how connected techn
 
 ## Final Prototype
 
-<p align="center">
-  <img src=<img width="406" height="647" alt="Final Prototype" src="https://github.com/user-attachments/assets/ba2e89c9-d6c2-4280-92ed-880876d1831d" />
-"
-       alt="Final Guinea Smart Community Totem prototype exhibited at the Connected Environments Degree Show 2026"
-       width="500">
-</p>
+![Final Guinea Smart Community Totem](<img width="406" height="647" alt="Final Prototype" src="https://github.com/user-attachments/assets/038983a1-3a99-4401-88a4-a6b950e5489f" />
+)
 
-<p align="center">
-  <em>Final Guinea Smart Community Totem proof-of-concept exhibited at the Connected Environments Degree Show 2026.</em>
-</p>
+*Final Guinea Smart Community Totem proof-of-concept exhibited at the Connected Environments Degree Show 2026.*
 
 ---
 
