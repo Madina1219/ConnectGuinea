@@ -7,7 +7,8 @@ A community-focused smart infrastructure prototype exploring how connected techn
 ## Final Prototype
 
 <p align="center">
-  <img src="Final%20Prototype%20and%20Exhibition/Final Prototype.png."
+  <img src=<img width="406" height="647" alt="Final Prototype" src="https://github.com/user-attachments/assets/ba2e89c9-d6c2-4280-92ed-880876d1831d" />
+"
        alt="Final Guinea Smart Community Totem prototype exhibited at the Connected Environments Degree Show 2026"
        width="500">
 </p>
@@ -67,7 +68,7 @@ The warning system is intentionally **visual rather than audible**.
 
 The video below demonstrates the final prototype responding to a simulated flood warning.
 
-<img width="3024" height="4032" alt="IMG_8730" src="https://github.com/user-attachments/assets/86f2f37a-c5b1-46b0-9f6e-11e92cbe9910" />
+https://github.com/user-attachments/assets/4ddb0561-cca5-4e6a-a8d4-dea9fc01bdc1
 
 ```
 
